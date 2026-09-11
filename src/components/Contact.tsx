@@ -1,10 +1,6 @@
 import RevealWrapper from "./RevealWrapper";
 
-interface ContactProps {
-  onAdminClick: () => void;
-}
-
-export default function Contact({ onAdminClick }: ContactProps) {
+export default function Contact() {
   return (
     <section
       id="contact"
@@ -68,12 +64,12 @@ export default function Contact({ onAdminClick }: ContactProps) {
           <span className="text-[10px] font-sans text-[#4a4845] uppercase tracking-[0.22em]">
             © 2026 Lawrie Abuna
           </span>
-          <button
+          {/* <button
             onClick={onAdminClick}
             className="text-[9px] font-sans text-[rgba(238,234,229,0.1)] hover:text-[#4a4845] transition-colors uppercase tracking-[0.2em]"
           >
             admin
-          </button>
+          </button> */}
         </div>
       </div>
     </section>

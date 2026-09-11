@@ -9,9 +9,25 @@ import ProjectModal from "./components/ProjectModal";
 import Contact from "./components/Contact";
 import Admin from "./components/Admin";
 
+function getViewFromPath(): "site" | "admin" {
+  return window.location.pathname === "/admin" ? "admin" : "site";
+}
+
 export default function App() {
-  const [view, setView] = useState<"site" | "admin">("site");
+  const [view, setView] = useState<"site" | "admin">(getViewFromPath());
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+   useEffect(() => {
+    const onPopState = () => setView(getViewFromPath());
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const closeAdmin = () => {
+    window.history.pushState({}, "", "/");
+    setView("site");
+  };
+
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
       const stored = localStorage.getItem("lawrie-portfolio-projects");
@@ -38,7 +54,7 @@ export default function App() {
       <Admin
         projects={projects}
         setProjects={setProjects}
-        onClose={() => setView("site")}
+        onClose={closeAdmin}
       />
     );
   }
@@ -58,7 +74,7 @@ export default function App() {
           projects={projects}
           onSelectProject={setSelectedProject}
         />
-        <Contact onAdminClick={() => setView("admin")} />
+        <Contact />
       </main>
 
       {selectedProject && (
