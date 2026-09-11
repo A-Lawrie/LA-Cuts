@@ -1,5 +1,9 @@
 {
+  "title": "Lawrie Abuna — Video Editor",
   "description": "Showcases a video editor's portfolio with categorized, filterable projects and an admin dashboard for easy content management and seamless client engagement.",
+  "icons": {
+    "icon": "/favicon.svg"
+  },
   "robots": {
     "index": true
   },
