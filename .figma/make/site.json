@@ -1,0 +1,10 @@
+{
+  "description": "Showcases a video editor's portfolio with categorized, filterable projects and an admin dashboard for easy content management and seamless client engagement.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
