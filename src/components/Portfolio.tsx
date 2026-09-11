@@ -13,7 +13,7 @@ function toTitleCase(str: string): string {
 }
 
 export default function Portfolio({ projects, onSelectProject }: PortfolioProps) {
-  const [mainCat, setMainCat] = useState<"longform" | "shortform">("longform");
+  const [mainCat, setMainCat] = useState<"longform" | "shortform">("shortform");
   const [subCat, setSubCat] = useState("all");
 
   const subcategories =
@@ -45,7 +45,7 @@ export default function Portfolio({ projects, onSelectProject }: PortfolioProps)
         {/* Long Form / Short Form tabs */}
         <RevealWrapper delay={60}>
           <div className="flex gap-8 border-b border-[rgba(238,234,229,0.1)] mb-8">
-            {(["longform", "shortform"] as const).map((cat) => (
+            {(["shortform", "longform"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => switchMainCat(cat)}
