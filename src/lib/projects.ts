@@ -29,7 +29,7 @@ function fromRow(row: ProjectRow): Project {
   };
 }
 
-function toRow(project: Project) {
+function toRow(project: Project): Omit<ProjectRow, "id"> & { id: string } {
   return {
     id: project.id,
     title: project.title,
@@ -44,10 +44,18 @@ function toRow(project: Project) {
   };
 }
 
+export function sortProjects(projects: Project[]): Project[] {
+  return [...projects].sort((a, b) => {
+    if (a.featured !== b.featured) return a.featured ? -1 : 1;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+}
+
 export async function fetchProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from("projects")
     .select("*")
+    .order("featured", { ascending: false })
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data as ProjectRow[]).map(fromRow);
