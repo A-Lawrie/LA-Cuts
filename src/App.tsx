@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { Project } from "./types";
-import { sampleProjects } from "./data";
+import {
+  fetchProjects,
+  insertProject,
+  updateProject,
+  deleteProjectById,
+} from "./lib/projects";
 import Nav from "./components/Nav";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -14,13 +19,23 @@ function getViewFromPath(): "site" | "admin" {
 }
 
 export default function App() {
-  const [view, setView] = useState<"site" | "admin">(getViewFromPath());
+  const [view, setView] = useState<"site" | "admin">(getViewFromPath);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-   useEffect(() => {
+  useEffect(() => {
     const onPopState = () => setView(getViewFromPath());
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
+    fetchProjects()
+      .then(setProjects)
+      .catch((err) => setLoadError(err.message ?? "Failed to load projects."))
+      .finally(() => setLoading(false));
   }, []);
 
   const closeAdmin = () => {
@@ -28,22 +43,26 @@ export default function App() {
     setView("site");
   };
 
-  const [projects, setProjects] = useState<Project[]>(() => {
-    try {
-      const stored = localStorage.getItem("lawrie-portfolio-projects");
-      if (stored) return JSON.parse(stored) as Project[];
-    } catch {
-      // ignore
-    }
-    return sampleProjects;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(
-      "lawrie-portfolio-projects",
-      JSON.stringify(projects)
+  const handleSaveProject = async (project: Project, isEditing: boolean) => {
+    const saved = isEditing
+      ? await updateProject(project)
+      : await insertProject(project);
+    setProjects((prev) =>
+      isEditing
+        ? prev.map((p) => (p.id === saved.id ? saved : p))
+        : [saved, ...prev]
     );
-  }, [projects]);
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    await deleteProjectById(id);
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleToggleFeatured = async (project: Project) => {
+    const updated = await updateProject({ ...project, featured: !project.featured });
+    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  };
 
   const featuredProject = projects.find(
     (p) => p.featured && p.mainCategory === "longform"
@@ -53,9 +72,21 @@ export default function App() {
     return (
       <Admin
         projects={projects}
-        setProjects={setProjects}
+        onSave={handleSaveProject}
+        onDelete={handleDeleteProject}
+        onToggleFeatured={handleToggleFeatured}
         onClose={closeAdmin}
       />
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-[#0a0908] flex items-center justify-center px-6">
+        <p className="font-sans text-[#7a7570] text-sm text-center">
+          Couldn't load projects right now. Please refresh the page.
+        </p>
+      </div>
     );
   }
 
@@ -71,7 +102,7 @@ export default function App() {
         />
         <About />
         <Portfolio
-          projects={projects}
+          projects={loading ? [] : projects}
           onSelectProject={setSelectedProject}
         />
         <Contact />

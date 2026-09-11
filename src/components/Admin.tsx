@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
 import {
   Project,
   MainCategory,
@@ -10,34 +12,73 @@ import { extractYouTubeId, getYouTubeThumbnail } from "../utils/youtube";
 
 interface AdminProps {
   projects: Project[];
-  setProjects: (projects: Project[]) => void;
+  onSave: (project: Project, isEditing: boolean) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onToggleFeatured: (project: Project) => Promise<void>;
   onClose: () => void;
 }
 
 type AdminTab = "manage" | "add";
 
-export default function Admin({ projects, setProjects, onClose }: AdminProps) {
+const inputClass =
+  "w-full border border-[rgba(238,234,229,0.15)] bg-[#141210] px-4 py-3 text-[0.875rem] font-sans text-[#eeeae5] placeholder:text-[#3d3a38] focus:outline-none focus:border-[rgba(238,234,229,0.45)] transition-colors";
+
+export default function Admin({ projects, onSave, onDelete, onToggleFeatured, onClose }: AdminProps) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthChecked(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const [tab, setTab] = useState<AdminTab>("manage");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
 
-  const deleteProject = (id: string) => {
-    if (window.confirm("Delete this project?")) {
-      setProjects(projects.filter((p) => p.id !== id));
+  const deleteProject = async (id: string) => {
+    if (!window.confirm("Delete this project?")) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      await onDelete(id);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to delete project.");
+    } finally {
+      setBusy(false);
     }
   };
 
-  const toggleFeatured = (id: string) => {
-    setProjects(projects.map((p) => (p.id === id ? { ...p, featured: !p.featured } : p)));
+  const toggleFeatured = async (id: string) => {
+    const project = projects.find((p) => p.id === id);
+    if (!project) return;
+    setActionError("");
+    try {
+      await onToggleFeatured(project);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to update project.");
+    }
   };
 
-  const handleSave = (project: Project) => {
-    if (editingProject) {
-      setProjects(projects.map((p) => (p.id === project.id ? project : p)));
-    } else {
-      setProjects([project, ...projects]);
+  const handleSave = async (project: Project) => {
+    setBusy(true);
+    setActionError("");
+    try {
+      await onSave(project, editingProject !== null);
+      setEditingProject(null);
+      setTab("manage");
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to save project.");
+    } finally {
+      setBusy(false);
     }
-    setEditingProject(null);
-    setTab("manage");
   };
 
   const startEdit = (project: Project) => {
@@ -51,6 +92,18 @@ export default function Admin({ projects, setProjects, onClose }: AdminProps) {
   };
 
   const isFormView = tab === "add" || editingProject !== null;
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-[#0a0908] flex items-center justify-center">
+        <p className="font-sans text-[#7a7570] text-sm">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AdminLogin onClose={onClose} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0908]">
@@ -79,19 +132,30 @@ export default function Admin({ projects, setProjects, onClose }: AdminProps) {
               ))}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-[11px] uppercase tracking-[0.2em] font-sans text-[#7a7570] hover:text-[#eeeae5] transition-colors flex items-center gap-2"
-          >
-            <span>←</span>
-            <span>Back to Site</span>
-          </button>
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="text-[11px] uppercase tracking-[0.2em] font-sans text-[#7a7570] hover:text-[#eeeae5] transition-colors"
+            >
+              Sign Out
+            </button>
+            <button
+              onClick={onClose}
+              className="text-[11px] uppercase tracking-[0.2em] font-sans text-[#7a7570] hover:text-[#eeeae5] transition-colors flex items-center gap-2"
+            >
+              <span>←</span>
+              <span>Back to Site</span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-[1100px] mx-auto px-6 md:px-12 py-12">
+        {actionError && (
+          <p className="text-[0.82rem] font-sans text-[#cc5555] mb-6">{actionError}</p>
+        )}
         {isFormView ? (
-          <ProjectForm project={editingProject} onSave={handleSave} onCancel={cancelForm} />
+          <ProjectForm project={editingProject} busy={busy} onSave={handleSave} onCancel={cancelForm} />
         ) : (
           <ProjectsTable
             projects={projects}
@@ -105,12 +169,77 @@ export default function Admin({ projects, setProjects, onClose }: AdminProps) {
   );
 }
 
+function AdminLogin({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) setError(error.message);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0908] flex items-center justify-center px-6">
+      <div className="w-full max-w-[360px]">
+        <h1
+          className="font-display text-[#eeeae5] mb-8"
+          style={{ fontSize: "clamp(1.6rem, 2.5vw, 2rem)" }}
+        >
+          Admin Sign In
+        </h1>
+        <div className="space-y-5">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className={inputClass}
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            placeholder="Password"
+            className={inputClass}
+          />
+          {error && <p className="text-[0.82rem] font-sans text-[#cc5555]">{error}</p>}
+          <div className="flex gap-4 pt-2">
+            <button
+              type="button"
+              onClick={handleLogin}
+              disabled={loading}
+              className="px-8 py-3 bg-[#eeeae5] text-[#0a0908] text-[11px] uppercase tracking-[0.2em] font-sans hover:bg-[#c8c4bf] transition-colors disabled:opacity-50"
+            >
+              {loading ? "Signing In…" : "Sign In"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 text-[11px] uppercase tracking-[0.2em] font-sans text-[#7a7570] hover:text-[#eeeae5] transition-colors"
+            >
+              Back to Site
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProjectForm({
   project,
+  busy,
   onSave,
   onCancel,
 }: {
   project: Project | null;
+  busy: boolean;
   onSave: (p: Project) => void;
   onCancel: () => void;
 }) {
@@ -156,9 +285,6 @@ function ProjectForm({
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
   };
-
-  const inputClass =
-    "w-full border border-[rgba(238,234,229,0.15)] bg-[#141210] px-4 py-3 text-[0.875rem] font-sans text-[#eeeae5] placeholder:text-[#3d3a38] focus:outline-none focus:border-[rgba(238,234,229,0.45)] transition-colors";
 
   return (
     <div className="max-w-[600px]">
@@ -267,9 +393,10 @@ function ProjectForm({
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-8 py-3 bg-[#eeeae5] text-[#0a0908] text-[11px] uppercase tracking-[0.2em] font-sans hover:bg-[#c8c4bf] transition-colors"
+            disabled={busy}
+            className="px-8 py-3 bg-[#eeeae5] text-[#0a0908] text-[11px] uppercase tracking-[0.2em] font-sans hover:bg-[#c8c4bf] transition-colors disabled:opacity-50"
           >
-            {project ? "Save Changes" : "Add Project"}
+            {busy ? "Saving…" : project ? "Save Changes" : "Add Project"}
           </button>
           <button
             type="button"
