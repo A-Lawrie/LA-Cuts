@@ -21,12 +21,14 @@ export const LONGFORM_SUBCATEGORIES = [
   { id: "documentary", label: "Documentary" },
   { id: "talking-head", label: "Talking Head" },
   { id: "commercial", label: "Commercial" },
+  { id: "podcasts", label: "Podcasts" },
 ];
 
 export const SHORTFORM_SUBCATEGORIES = [
   { id: "all", label: "All" },
   { id: "real-estate", label: "Real Estate" },
   { id: "talking-head", label: "Talking Head" },
+  { id: "podcasts", label: "Podcasts Clips" },
   { id: "product", label: "Product" },
   { id: "social-media", label: "Social Media" },
   { id: "color-grading", label: "Color Grading" },
@@ -37,6 +39,7 @@ export const SHORTFORM_SUBCATEGORIES = [
 export const WORK_ITEMS = [
   "Editing",
   "Pacing",
+  "Captions",
   "Color Grading",
   "Sound Design",
   "Motion Graphics",
