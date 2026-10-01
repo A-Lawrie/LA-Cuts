@@ -10,7 +10,7 @@ import {
   WORK_ITEMS,
 } from "../types";
 import { extractYouTubeId, getYouTubeThumbnail } from "../utils/youtube";
-import { extractDriveFileId } from "../utils/drive";
+import { extractDriveFileId, getDriveThumbnail } from "../utils/drive";
 
 interface AdminProps {
   projects: Project[];
@@ -278,10 +278,6 @@ function ProjectForm({
       );
       return;
     }
-    if (videoSource === "drive" && !thumbnailUrl.trim()) {
-      setError("A custom thumbnail is required for Google Drive videos — Drive links can't auto-generate one.");
-      return;
-    }
     setError("");
     const saved: Project = {
       id: project?.id ?? Date.now().toString(),
@@ -397,7 +393,17 @@ function ProjectForm({
         </Field>
 
         <Field label="Custom Thumbnail URL (optional)">
-          <input type="text" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} placeholder="Leave empty to use YouTube thumbnail" className={inputClass} />
+          <input
+            type="text"
+            value={thumbnailUrl}
+            onChange={(e) => setThumbnailUrl(e.target.value)}
+            placeholder={
+              videoSource === "drive"
+                ? "Leave empty to auto-generate from the Drive file"
+                : "Leave empty to use YouTube thumbnail"
+            }
+            className={inputClass}
+          />
         </Field>
 
         <Field label="Description (optional)">
@@ -464,6 +470,7 @@ function ProjectForm({
   );
 }
 
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -486,7 +493,9 @@ function ProjectsTable({
 }) {
   const [filter, setFilter] = useState<"all" | "longform" | "shortform">("all");
   const filtered = filter === "all" ? projects : projects.filter((p) => p.mainCategory === filter);
-  const getThumbnail = (p: Project) => p.thumbnailUrl || (p.videoSource === "youtube" ? getYouTubeThumbnail(p.videoId) : null);
+  const getThumbnail = (p: Project) =>
+    p.thumbnailUrl ||
+    (p.videoSource === "youtube" ? getYouTubeThumbnail(p.videoId) : getDriveThumbnail(p.videoId));
 
   return (
     <div>
@@ -529,11 +538,7 @@ function ProjectsTable({
                 i < filtered.length - 1 ? "border-b border-[rgba(238,234,229,0.05)]" : ""
               }`}
             >
-            {getThumbnail(project) ? (
-                <img src={getThumbnail(project)!} alt={project.title} className="w-14 aspect-video object-cover bg-[#1a1715]" />
-              ) : (
-                <div className="w-14 aspect-video bg-[#1a1715]" />
-            )}  
+            <img src={getThumbnail(project)} alt={project.title} className="w-14 aspect-video object-cover bg-[#1a1715]" />  
               <span className="text-[0.82rem] font-sans text-[#eeeae5] truncate pr-2">{project.title}</span>
               <span className="text-[10px] font-sans text-[#7a7570] uppercase tracking-wide">
                 {project.mainCategory === "longform" ? "Long" : "Short"}

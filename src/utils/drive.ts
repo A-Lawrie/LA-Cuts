@@ -13,3 +13,6 @@ export function extractDriveFileId(url: string): string | null {
 export function getDriveEmbedUrl(fileId: string): string {
   return `https://drive.google.com/file/d/${fileId}/preview`;
 }
+export function getDriveThumbnail(fileId: string): string {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w640`;
+}

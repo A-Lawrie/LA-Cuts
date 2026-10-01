@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import timelineBg from "@/imports/timeline.jpg";
 import { Project } from "../types";
 import { getYouTubeThumbnail } from "../utils/youtube";
+import { getDriveThumbnail } from "../utils/drive";
 
 interface HeroProps {
   featuredProject?: Project;
@@ -61,7 +62,10 @@ export default function Hero({ featuredProject, onViewWork }: HeroProps) {
   }, []);
 
   const thumbnail = featuredProject
-    ? featuredProject.thumbnailUrl || getYouTubeThumbnail(featuredProject.youtubeId)
+    ? featuredProject.thumbnailUrl ||
+      (featuredProject.videoSource === "youtube"
+          ? getYouTubeThumbnail(featuredProject.videoId)
+          : getDriveThumbnail(featuredProject.videoId))
     : null;
 
   return (
