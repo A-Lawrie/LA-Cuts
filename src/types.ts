@@ -1,11 +1,13 @@
 export type MainCategory = "longform" | "shortform";
+export type VideoSource = "youtube" | "drive";
 
 export interface Project {
   id: string;
   title: string;
   mainCategory: MainCategory;
   subcategory: string;
-  youtubeId: string;
+  videoSource: VideoSource;
+  videoId: string;
   thumbnailUrl?: string;
   description: string;
   featured: boolean;

@@ -1,12 +1,13 @@
 import { supabase } from "./supabase";
-import { Project, MainCategory } from "../types";
+import { Project, MainCategory, VideoSource } from "../types";
 
 interface ProjectRow {
   id: string;
   title: string;
   main_category: MainCategory;
   subcategory: string;
-  youtube_id: string;
+  video_source: VideoSource;
+  video_id: string;
   thumbnail_url: string | null;
   description: string;
   featured: boolean;
@@ -20,7 +21,8 @@ function fromRow(row: ProjectRow): Project {
     title: row.title,
     mainCategory: row.main_category,
     subcategory: row.subcategory,
-    youtubeId: row.youtube_id,
+    videoSource: row.video_source,
+    videoId: row.video_id,
     thumbnailUrl: row.thumbnail_url ?? undefined,
     description: row.description,
     featured: row.featured,
@@ -35,7 +37,8 @@ function toRow(project: Project): Omit<ProjectRow, "id"> & { id: string } {
     title: project.title,
     main_category: project.mainCategory,
     subcategory: project.subcategory,
-    youtube_id: project.youtubeId,
+    video_source: project.videoSource,
+    video_id: project.videoId,
     thumbnail_url: project.thumbnailUrl ?? null,
     description: project.description,
     featured: project.featured,

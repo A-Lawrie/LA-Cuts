@@ -1,4 +1,6 @@
 import { Project } from "./types";
+import { VideoSource } from "./types";
+
 
 export const sampleProjects: Project[] = [
   {
@@ -6,7 +8,8 @@ export const sampleProjects: Project[] = [
     title: "Balance - A short film(Director's Cut)",
     mainCategory: "longform",
     subcategory: "documentary",
-    youtubeId: "f9A5AX_AaaQ",
+    videoSource: "youtube",
+    videoId: "f9A5AX_AaaQ",
     description:
       "A cinematic walkthrough of a 5-bedroom luxury villa in Lavington, Nairobi. Showcasing architecture, interiors, and lush outdoor spaces with precise color grading and atmospheric sound design.",
     featured: true,
@@ -18,7 +21,7 @@ export const sampleProjects: Project[] = [
   //   title: "Nairobi in 72 Hours",
   //   mainCategory: "longform",
   //   subcategory: "vlogs",
-  //   youtubeId: "dQw4w9WgXcQ",
+  //   videoId: "dQw4w9WgXcQ",
   //   thumbnailUrl:
   //     "https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?w=800&h=450&fit=crop&auto=format",
   //   description:
@@ -32,7 +35,7 @@ export const sampleProjects: Project[] = [
   //   title: "The Future of Tech in Africa",
   //   mainCategory: "longform",
   //   subcategory: "documentary",
-  //   youtubeId: "dQw4w9WgXcQ",
+  //   videoId: "dQw4w9WgXcQ",
   //   thumbnailUrl:
   //     "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=450&fit=crop&auto=format",
   //   description:
@@ -52,7 +55,7 @@ export const sampleProjects: Project[] = [
   //   title: "DaVinci Resolve Color Masterclass",
   //   mainCategory: "longform",
   //   subcategory: "youtube",
-  //   youtubeId: "dQw4w9WgXcQ",
+  //   videoId: "dQw4w9WgXcQ",
   //   thumbnailUrl:
   //     "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&h=450&fit=crop&auto=format",
   //   description:
@@ -66,7 +69,7 @@ export const sampleProjects: Project[] = [
   //   title: "Brand Story — Nairobi Garage",
   //   mainCategory: "longform",
   //   subcategory: "commercial",
-  //   youtubeId: "dQw4w9WgXcQ",
+  //   videoId: "dQw4w9WgXcQ",
   //   thumbnailUrl:
   //     "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=450&fit=crop&auto=format",
   //   description:
@@ -85,7 +88,7 @@ export const sampleProjects: Project[] = [
   //   title: "Talking Head — Founder Interview",
   //   mainCategory: "longform",
   //   subcategory: "talking-head",
-  //   youtubeId: "dQw4w9WgXcQ",
+  //   videoId: "dQw4w9WgXcQ",
   //   thumbnailUrl:
   //     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=450&fit=crop&auto=format",
   //   description:
@@ -99,7 +102,8 @@ export const sampleProjects: Project[] = [
     title: "Kilimani Penthouse — Vertical Tour",
     mainCategory: "shortform",
     subcategory: "real-estate",
-    youtubeId: "dQw4w9WgXcQ",
+    videoSource: "youtube",
+    videoId: "dQw4w9WgXcQ",
     thumbnailUrl:
       "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=450&h=800&fit=crop&auto=format",
     description:
@@ -113,7 +117,8 @@ export const sampleProjects: Project[] = [
     title: "Day in the Life — Nairobi Creator",
     mainCategory: "shortform",
     subcategory: "social-media",
-    youtubeId: "dQw4w9WgXcQ",
+    videoSource: "youtube",
+    videoId: "dQw4w9WgXcQ",
     thumbnailUrl:
       "https://images.unsplash.com/photo-1512314889357-e157c22f938d?w=450&h=800&fit=crop&auto=format",
     description:
@@ -127,7 +132,8 @@ export const sampleProjects: Project[] = [
     title: "Cinematic Nairobi — Golden Hour",
     mainCategory: "shortform",
     subcategory: "cinematic",
-    youtubeId: "dQw4w9WgXcQ",
+    videoSource: "youtube",
+    videoId: "dQw4w9WgXcQ",
     thumbnailUrl:
       "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=450&h=800&fit=crop&auto=format",
     description:
@@ -141,7 +147,8 @@ export const sampleProjects: Project[] = [
     title: "Product Launch — Wireless Earbuds",
     mainCategory: "shortform",
     subcategory: "product",
-    youtubeId: "dQw4w9WgXcQ",
+    videoSource: "youtube",
+    videoId: "dQw4w9WgXcQ",
     thumbnailUrl:
       "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=450&h=800&fit=crop&auto=format",
     description:

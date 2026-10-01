@@ -124,7 +124,8 @@ function ProjectCard({
   index: number;
 }) {
   const thumbnailUrl =
-    project.thumbnailUrl || getYouTubeThumbnail(project.youtubeId);
+    project.thumbnailUrl ||
+    (project.videoSource === "youtube" ? getYouTubeThumbnail(project.videoId) : undefined);
 
   return (
     <button
@@ -138,11 +139,13 @@ function ProjectCard({
           isShortForm ? "aspect-[9/16]" : "aspect-video"
         }`}
       >
-        <img
-          src={thumbnailUrl}
-          alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-        />
+        {thumbnailUrl && (
+          <img
+            src={thumbnailUrl}
+            alt={project.title}
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          />
+        )}
         {/* Hover overlay + play button */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors duration-300 flex items-center justify-center">
           <div className="w-11 h-11 rounded-full bg-[rgba(238,234,229,0.12)] border border-[rgba(238,234,229,0.25)] flex items-center justify-center opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300">

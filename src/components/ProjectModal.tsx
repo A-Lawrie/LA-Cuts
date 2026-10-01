@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Project } from "../types";
+import { getDriveEmbedUrl } from "../utils/drive";
 
 function toTitleCase(str: string): string {
   return str.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -79,7 +80,11 @@ export default function ProjectModal({
           <div className={isShortForm ? "w-full max-w-[300px]" : "w-full"}>
             <div style={{ position: "relative", paddingTop: isShortForm ? "177.78%" : "56.25%" }}>
               <iframe
-                src={`https://www.youtube.com/embed/${project.youtubeId}?rel=0&modestbranding=1&color=white`}
+                src={
+                  project.videoSource === "drive"
+                    ? getDriveEmbedUrl(project.videoId)
+                    : `https://www.youtube.com/embed/${project.videoId}?rel=0&modestbranding=1&color=white`
+                }
                 title={project.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

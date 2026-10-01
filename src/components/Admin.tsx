@@ -4,11 +4,13 @@ import { supabase } from "../lib/supabase";
 import {
   Project,
   MainCategory,
+  VideoSource,
   LONGFORM_SUBCATEGORIES,
   SHORTFORM_SUBCATEGORIES,
   WORK_ITEMS,
 } from "../types";
 import { extractYouTubeId, getYouTubeThumbnail } from "../utils/youtube";
+import { extractDriveFileId } from "../utils/drive";
 
 interface AdminProps {
   projects: Project[];
@@ -244,9 +246,13 @@ function ProjectForm({
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState(project?.title ?? "");
-  const [youtubeUrl, setYoutubeUrl] = useState(
-    project?.youtubeId ? `https://youtube.com/watch?v=${project.youtubeId}` : ""
-  );
+  const [videoSource, setVideoSource] = useState<VideoSource>(project?.videoSource ?? "youtube");
+  const [videoUrl, setVideoUrl] = useState(() => {
+    if (!project) return "";
+    return project.videoSource === "drive"
+      ? `https://drive.google.com/file/d/${project.videoId}/view`
+      : `https://youtube.com/watch?v=${project.videoId}`;
+  });
   const [mainCategory, setMainCategory] = useState<MainCategory>(project?.mainCategory ?? "longform");
   const [subcategory, setSubcategory] = useState(project?.subcategory ?? "real-estate");
   const [thumbnailUrl, setThumbnailUrl] = useState(project?.thumbnailUrl ?? "");
@@ -259,18 +265,31 @@ function ProjectForm({
     mainCategory === "longform" ? LONGFORM_SUBCATEGORIES : SHORTFORM_SUBCATEGORIES
   ).filter((s) => s.id !== "all");
 
-  const detectedId = extractYouTubeId(youtubeUrl);
+  const detectedId =
+    videoSource === "drive" ? extractDriveFileId(videoUrl) : extractYouTubeId(videoUrl);
 
   const handleSubmit = () => {
     if (!title.trim()) { setError("Project title is required."); return; }
-    if (!detectedId)   { setError("Please enter a valid YouTube URL."); return; }
+    if (!detectedId) {
+      setError(
+        videoSource === "drive"
+          ? "Please enter a valid Google Drive share link."
+          : "Please enter a valid YouTube URL."
+      );
+      return;
+    }
+    if (videoSource === "drive" && !thumbnailUrl.trim()) {
+      setError("A custom thumbnail is required for Google Drive videos — Drive links can't auto-generate one.");
+      return;
+    }
     setError("");
     const saved: Project = {
       id: project?.id ?? Date.now().toString(),
       title: title.trim(),
       mainCategory,
       subcategory,
-      youtubeId: detectedId,
+      videoSource,
+      videoId: detectedId,
       thumbnailUrl: thumbnailUrl.trim() || undefined,
       description: description.trim(),
       featured,
@@ -300,9 +319,43 @@ function ProjectForm({
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Luxury Villa — Lavington" className={inputClass} />
         </Field>
 
-        <Field label="YouTube URL">
-          <input type="text" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
-          {youtubeUrl && (
+        <Field label="Video Source">
+          <div className="flex gap-3">
+            {(["youtube", "drive"] as VideoSource[]).map((src) => (
+              <button
+                key={src}
+                type="button"
+                onClick={() => { setVideoSource(src); setVideoUrl(""); }}
+                className={`px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] font-sans transition-all ${
+                  videoSource === src
+                    ? "bg-[#eeeae5] text-[#0a0908]"
+                    : "border border-[rgba(238,234,229,0.15)] text-[#7a7570] hover:border-[rgba(238,234,229,0.4)]"
+                }`}
+              >
+                {src === "youtube" ? "YouTube" : "Google Drive"}
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <Field label={videoSource === "drive" ? "Google Drive Share Link" : "YouTube URL"}>
+          <input
+            type="text"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder={
+              videoSource === "drive"
+                ? "https://drive.google.com/file/d/.../view?usp=sharing"
+                : "https://youtube.com/watch?v=..."
+            }
+            className={inputClass}
+          />
+          {videoSource === "drive" && (
+            <p className="mt-1.5 text-[11px] font-sans text-[#7a7570]">
+              Make sure the file's sharing setting is "Anyone with the link" — otherwise the video won't play for visitors.
+            </p>
+          )}
+          {videoUrl && (
             <p className={`mt-1.5 text-[11px] font-sans ${detectedId ? "text-[#7a7570]" : "text-[#cc5555]"}`}>
               {detectedId ? `✓ Video ID: ${detectedId}` : "✗ Could not detect a video ID"}
             </p>
@@ -433,7 +486,7 @@ function ProjectsTable({
 }) {
   const [filter, setFilter] = useState<"all" | "longform" | "shortform">("all");
   const filtered = filter === "all" ? projects : projects.filter((p) => p.mainCategory === filter);
-  const getThumbnail = (p: Project) => p.thumbnailUrl || getYouTubeThumbnail(p.youtubeId);
+  const getThumbnail = (p: Project) => p.thumbnailUrl || (p.videoSource === "youtube" ? getYouTubeThumbnail(p.videoId) : null);
 
   return (
     <div>
@@ -476,7 +529,11 @@ function ProjectsTable({
                 i < filtered.length - 1 ? "border-b border-[rgba(238,234,229,0.05)]" : ""
               }`}
             >
-              <img src={getThumbnail(project)} alt={project.title} className="w-14 aspect-video object-cover bg-[#1a1715]" />
+            {getThumbnail(project) ? (
+                <img src={getThumbnail(project)!} alt={project.title} className="w-14 aspect-video object-cover bg-[#1a1715]" />
+              ) : (
+                <div className="w-14 aspect-video bg-[#1a1715]" />
+            )}  
               <span className="text-[0.82rem] font-sans text-[#eeeae5] truncate pr-2">{project.title}</span>
               <span className="text-[10px] font-sans text-[#7a7570] uppercase tracking-wide">
                 {project.mainCategory === "longform" ? "Long" : "Short"}
